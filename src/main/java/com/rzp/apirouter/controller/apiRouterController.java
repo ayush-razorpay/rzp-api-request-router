@@ -6,12 +6,17 @@ import com.rzp.apirouter.dto.WebhookDto;
 import com.rzp.apirouter.exception.ApiRouterException;
 import com.rzp.apirouter.service.ApiRouter;
 import lombok.var;
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.Base64;
+
 
 @RestController
 public class apiRouterController {
@@ -40,5 +45,33 @@ public class apiRouterController {
         var response = ControllerResponseDto.of("Subscription Removed", "");
         return ResponseEntity.ok(response);
     }
+
+
+    @GetMapping("/paymentMethods/{keyId}")
+    ResponseEntity getPaymentMethods(@PathVariable(name ="keyId" ) String keyId ) throws ApiRouterException, IOException {
+
+
+      //  String encoded = Base64.getEncoder().encodeToString(keyId.getBytes());
+       // String credential = Credentials.basic(keyId.trim(), "");
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+       // String value = "Basic "+"cnpwX3Rlc3Rfb0pQYmo5ckMxckRHQVE6";
+        System.out.printf("credential"+keyId);
+        StringBuilder value = new StringBuilder("Basic ").append(keyId);
+        Request request = new Request.Builder()
+                .url("https://api.razorpay.com/v1/methods")
+                .method("GET", null)
+                .addHeader("Host", "api.razorpay.com")
+                .addHeader("Authorization", value.toString().trim())
+                .build();
+        Response response = client.newCall(request).execute();
+      //  Response response = client.newCall(request).execute();
+
+
+       // var res = ControllerResponseDto.of("Processed", "");
+        return ResponseEntity.ok(response.body().string());
+    }
+
+
 
 }

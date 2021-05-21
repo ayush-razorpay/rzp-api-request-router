@@ -29,10 +29,21 @@ public class ApiRouterImpl implements ApiRouter {
     }
 
     @Override
-    public void processRequest(WebhookDto wDto) throws IOException {
+    public void processRequest(WebhookDto wDto) throws IOException, ApiRouterException {
 
-        final String mid = wDto.getAccount_id().substring(4);
-        String url = this.listOfSubscribers.get(mid);
+         String mid ;
+        try {
+            mid = wDto.getAccount_id().substring(4);
+        }catch (Exception e)
+        {
+            log.error("Failed to identify the mid for requested mid {} and payload : {}"
+                    ,wDto.getAccount_id(),wDto);
+            throw new ApiRouterException("Failed to identify the mid for requested mid:"+wDto.getAccount_id());
+
+        }
+
+
+         String url = this.listOfSubscribers.get(mid);
         if (url != null) {
 
             log.info("routing request for mid : {} . request payload : {}", mid, wDto);

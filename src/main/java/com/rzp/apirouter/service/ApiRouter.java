@@ -15,13 +15,13 @@ public interface ApiRouter {
         new Thread(() -> {
             try {
                 processRequest(wDto);
-            } catch (IOException e) {
+            } catch (IOException | ApiRouterException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    public void processRequest(WebhookDto wDto) throws IOException;
+    public void processRequest(WebhookDto wDto) throws IOException, ApiRouterException;
 
     public void subscribe(ApiRouterRequestDto aDto) throws ApiRouterException;
 

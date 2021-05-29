@@ -11,11 +11,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestController
@@ -25,7 +29,10 @@ public class apiRouterController {
     ApiRouter apiRouter;
 
     @PostMapping("/webhookProcess")
-    ResponseEntity webhookProcess(@RequestBody WebhookDto aDto) throws ApiRouterException {
+    ResponseEntity webhookProcess(@RequestBody WebhookDto aDto, @RequestHeader HttpHeaders headers) throws ApiRouterException {
+
+        Map<String,String> headerMap=headers.toSingleValueMap();
+        aDto.setHeaders(headerMap);
         apiRouter.invokeRequest(aDto);
         var response = ControllerResponseDto.of("Processed", "");
         return ResponseEntity.ok(response);

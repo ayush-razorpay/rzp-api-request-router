@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -52,11 +53,16 @@ public class ApiRouterImpl implements ApiRouter {
                     .build();
             MediaType mediaType = MediaType.parse("application/json");
             RequestBody body = RequestBody.create(mediaType, new Gson().toJson(wDto));
-            Request request = new Request.Builder()
+            Request.Builder requestBuilder = new Request.Builder()
                     .url(url)
-                    .method("POST", body)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
+                    .method("POST", body);
+                //    .addHeader("Content-Type", "application/json")
+            for (Map.Entry<String, String> entry : wDto.getHeaders().entrySet()) {
+                if(entry.getKey().equals("X-Razorpay-Signature"))
+                requestBuilder.addHeader(entry.getKey(),entry.getValue());
+            }
+
+            Request request =      requestBuilder .build();
             Response response = client.newCall(request).execute();
 
             log.info("Route Response : {}", response);

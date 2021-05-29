@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
@@ -17,4 +18,5 @@ public class WebhookDto {
     private String event;
     private List<String> contains;
     private Object payload;
+    private Map<String,String> headers;
 }

@@ -1,5 +1,6 @@
 package com.rzp.apirouter.dto;
 
+import com.google.gson.annotations.Expose;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,10 +14,16 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class WebhookDto {
 
+    @Expose
     private String entity;
+    @Expose
     private String account_id;
+    @Expose
     private String event;
+    @Expose
     private List<String> contains;
+    @Expose
     private Object payload;
+
     private Map<String,String> headers;
 }

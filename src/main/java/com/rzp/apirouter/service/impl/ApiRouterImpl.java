@@ -6,6 +6,7 @@ import com.rzp.apirouter.dto.WebhookDto;
 import com.rzp.apirouter.exception.ApiRouterException;
 import com.rzp.apirouter.service.ApiRouter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import okhttp3.*;
 import org.springframework.stereotype.Service;
 
@@ -53,11 +54,14 @@ public class ApiRouterImpl implements ApiRouter {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             MediaType mediaType = MediaType.parse("application/json");
+
+
+            val toSend = wDto;
+
             RequestBody body = RequestBody.create(mediaType, new Gson().toJson(wDto));
             Request.Builder requestBuilder = new Request.Builder()
                     .url(url)
                     .method("POST", body);
-                //    .addHeader("Content-Type", "application/json")
             for (Map.Entry<String, String> entry : wDto.getHeaders().entrySet()) {
                 if(entry.getKey().equalsIgnoreCase("X-Razorpay-Signature"))
                 requestBuilder.addHeader(entry.getKey(),entry.getValue());

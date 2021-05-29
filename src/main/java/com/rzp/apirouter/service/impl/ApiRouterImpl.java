@@ -59,7 +59,7 @@ public class ApiRouterImpl implements ApiRouter {
                     .method("POST", body);
                 //    .addHeader("Content-Type", "application/json")
             for (Map.Entry<String, String> entry : wDto.getHeaders().entrySet()) {
-                if(entry.getKey().equals("X-Razorpay-Signature"))
+                if(entry.getKey().equalsIgnoreCase("X-Razorpay-Signature"))
                 requestBuilder.addHeader(entry.getKey(),entry.getValue());
             }
 

@@ -32,6 +32,7 @@ public class ApiRouterImpl implements ApiRouter {
     @Override
     public void processRequest(WebhookDto wDto) throws IOException, ApiRouterException {
 
+        System.out.printf(wDto.toString());
          String mid ;
         try {
             mid = wDto.getAccount_id().substring(4);

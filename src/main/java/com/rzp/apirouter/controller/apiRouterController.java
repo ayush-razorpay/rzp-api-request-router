@@ -32,8 +32,7 @@ public class apiRouterController {
     ResponseEntity webhookProcess(@RequestBody WebhookDto aDto, @RequestHeader HttpHeaders headers) throws ApiRouterException {
 
         Map<String,String> headerMap=headers.toSingleValueMap();
-        aDto.setHeaders(headerMap);
-        apiRouter.invokeRequest(aDto);
+        apiRouter.invokeRequest(aDto,headerMap);
         var response = ControllerResponseDto.of("Processed", "");
         return ResponseEntity.ok(response);
     }

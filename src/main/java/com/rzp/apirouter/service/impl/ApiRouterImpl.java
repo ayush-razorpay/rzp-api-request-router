@@ -31,7 +31,7 @@ public class ApiRouterImpl implements ApiRouter {
     }
 
     @Override
-    public void processRequest(WebhookDto wDto) throws IOException, ApiRouterException {
+    public void processRequest(WebhookDto wDto,Map<String,String> headers) throws IOException, ApiRouterException {
 
         System.out.printf(wDto.toString());
          String mid ;
@@ -62,7 +62,7 @@ public class ApiRouterImpl implements ApiRouter {
             Request.Builder requestBuilder = new Request.Builder()
                     .url(url)
                     .method("POST", body);
-            for (Map.Entry<String, String> entry : wDto.getHeaders().entrySet()) {
+            for (Map.Entry<String, String> entry :headers.entrySet()) {
                 if(entry.getKey().equalsIgnoreCase("X-Razorpay-Signature"))
                 requestBuilder.addHeader(entry.getKey(),entry.getValue());
             }

@@ -12,21 +12,21 @@ import java.util.Map;
 public interface ApiRouter {
 
 
-    default void invokeRequest(WebhookDto wDto, Map<String,String> headers) {
+    default void invokeRequest(WebhookDto wDto, Map<String, String> headers, String keyId) {
         new Thread(() -> {
             try {
-                processRequest(wDto,headers);
+                processRequest(wDto, headers,keyId);
             } catch (IOException | ApiRouterException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    public void processRequest(WebhookDto wDto,Map<String,String> headers) throws IOException, ApiRouterException;
+    public void processRequest(WebhookDto wDto, Map<String, String> headers, String keyId) throws IOException, ApiRouterException;
 
-    public void subscribe(ApiRouterRequestDto aDto) throws ApiRouterException;
+    public void subscribe(String auth,ApiRouterRequestDto aDto) throws ApiRouterException;
 
-    public void unsubscribe(ApiRouterRequestDto aDto) throws ApiRouterException;
+    public void unsubscribe(String auth) throws ApiRouterException;
 
 
 }

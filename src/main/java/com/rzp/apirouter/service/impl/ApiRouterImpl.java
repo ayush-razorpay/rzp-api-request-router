@@ -5,6 +5,7 @@ import com.rzp.apirouter.dto.ApiRouterRequestDto;
 import com.rzp.apirouter.dto.WebhookDto;
 import com.rzp.apirouter.exception.ApiRouterException;
 import com.rzp.apirouter.service.ApiRouter;
+import com.rzp.apirouter.service.RazorpayWebhookClient;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import okhttp3.*;
@@ -12,8 +13,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.rzp.apirouter.service.impl.RazorpayWebhookClientImpl.routerURL;
 
 @Slf4j
 @Service
@@ -31,25 +36,29 @@ public class ApiRouterImpl implements ApiRouter {
     }
 
     @Override
-    public void processRequest(WebhookDto wDto,Map<String,String> headers) throws IOException, ApiRouterException {
+    public void processRequest(WebhookDto wDto, Map<String, String> headers, String keyId) throws IOException, ApiRouterException {
 
         System.out.printf(wDto.toString());
-         String mid ;
+       // String mid;
+        String url;
         try {
-            mid = wDto.getAccount_id().substring(4);
-        }catch (Exception e)
-        {
+            url = this.listOfSubscribers.get(keyId);
+
+            if(url == null || url.isEmpty())
+            throw new ApiRouterException("keyid not registered");
+           // mid = wDto.getAccount_id().substring(4);
+        } catch (Exception e) {
             log.error("Failed to identify the mid for requested mid {} and payload : {}"
-                    ,wDto.getAccount_id(),wDto);
-            throw new ApiRouterException("Failed to identify the mid for requested mid:"+wDto.getAccount_id());
+                    , wDto.getAccount_id(), wDto);
+            throw new ApiRouterException("Failed to identify the mid for requested mid:" + wDto.getAccount_id());
 
         }
 
 
-         String url = this.listOfSubscribers.get(mid);
+
         if (url != null) {
 
-            log.info("routing request for mid : {} . request payload : {}", mid, wDto);
+            log.info("routing request for keyId : {} . request payload : {}", keyId, wDto);
 
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
@@ -62,12 +71,12 @@ public class ApiRouterImpl implements ApiRouter {
             Request.Builder requestBuilder = new Request.Builder()
                     .url(url)
                     .method("POST", body);
-            for (Map.Entry<String, String> entry :headers.entrySet()) {
-                if(entry.getKey().equalsIgnoreCase("X-Razorpay-Signature"))
-                requestBuilder.addHeader(entry.getKey(),entry.getValue());
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase("X-Razorpay-Signature"))
+                    requestBuilder.addHeader(entry.getKey(), entry.getValue());
             }
 
-            Request request =      requestBuilder .build();
+            Request request = requestBuilder.build();
             Response response = client.newCall(request).execute();
 
             log.info("Route Response : {}", response);
@@ -78,24 +87,46 @@ public class ApiRouterImpl implements ApiRouter {
     }
 
     @Override
-    public void subscribe(ApiRouterRequestDto aDto) throws ApiRouterException {
-        validateADto(aDto);
-        this.listOfSubscribers.put(aDto.getMid(), aDto.getUrl());
+    public void subscribe(String auth,ApiRouterRequestDto aDto) throws ApiRouterException {
+
+
+        if(auth.isEmpty())
+            throw new ApiRouterException("Auth header cannot ve null");
+        this.validateADto(aDto);
+
+
+        RazorpayWebhookClient client = new RazorpayWebhookClientImpl(auth);
+
+        try {
+           List<Map> webhooks =  client.fetchAll();
+            log.info("webhooks fetched : {}",webhooks);
+
+            Optional<Map> w =  webhooks.stream().filter(x->x.get("url").equals(routerURL+"/"+client.getKeyId())).findFirst();
+
+            if(w.isPresent()){
+                //update
+                Map<String,Boolean> events = (Map<String,Boolean>) w.get().get("events");
+               client.update(String.valueOf(w.get().get("id")), client.getPayload(events));
+
+            }else {
+                //add new
+                client.registerNew();
+            }
+            this.listOfSubscribers.put(client.getKeyId(),aDto.getUrl());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
     @Override
-    public void unsubscribe(ApiRouterRequestDto aDto) throws ApiRouterException {
+    public void unsubscribe(String auth) throws ApiRouterException {
 
-        if (aDto.getMid() == null || aDto.getMid().trim().isEmpty())
-            throw new ApiRouterException("not a valid MID. Unsubscribe failed");
-
-        this.listOfSubscribers.remove(aDto.getMid());
     }
 
+
     void validateADto(ApiRouterRequestDto aDto) throws ApiRouterException {
-        if (aDto.getMid() == null || aDto.getMid().trim().isEmpty())
-            throw new ApiRouterException("not a valid MID. subscribe request in not valid");
 
         if (aDto.getUrl() == null || aDto.getUrl().trim().isEmpty() || isNotURL(aDto.getUrl().trim()))
             throw new ApiRouterException("not a valid url. subscribe request in not valid");
